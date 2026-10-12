@@ -1,0 +1,36 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Matches your @types/node configuration
+          cache: 'npm'       # Automatically caches your node_modules for faster subsequent runs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Build Next.js Application
+        run: npm run build
+        env:
+          # Next.js builds often fail if required environment variables are completely missing.
+          # We provide dummy placeholders here so the compiler passes successfully.
+          OLLAMA_CHAT_MODEL: "qwen2.5:3b"
+          OLLAMA_BASE_URL: "http://127.0.0.1:11434"
+          OLLAMA_EMBEDDING_MODEL: "nomic-embed-text"
