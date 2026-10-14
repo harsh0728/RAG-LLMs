@@ -40,6 +40,7 @@ export async function POST(request: Request) {
         chunkIndex: chunk.chunkIndex,
         content: chunk.content,
         score: chunk.score,
+        pageNumber: chunk.pageNumber ?? null,
       })),
     });
   } catch (error) {

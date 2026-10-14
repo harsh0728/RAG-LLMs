@@ -116,6 +116,7 @@ export async function POST(request: Request) {
       chunkIndex: chunk.chunkIndex,
       score: chunk.score,
       content: chunk.content,
+      pageNumber: chunk.pageNumber ?? null,
     }));
 
     const context = sources
@@ -165,6 +166,7 @@ Answer with source citations:
         chunkIndex: source.chunkIndex,
         score: source.score,
         content: source.content,
+        pageNumber: source.pageNumber ?? null,
       })),
     });
   } catch (error) {

@@ -1,0 +1,1 @@
+﻿RAG stands for Retrieval-Augmented Generation. Embeddings convert text into numeric vectors. Chunking splits large documents into smaller text segments. Semantic search retrieves passages based on meaning. The LLM uses retrieved passages to answer the user's question.

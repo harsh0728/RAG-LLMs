@@ -10,6 +10,7 @@ export type StoredChunk = {
   content: string;
   embedding: number[];
   createdAt: string;
+  pageNumber?:number;
 };
 
 const dataDirectory = path.join(process.cwd(), "data");
@@ -34,17 +35,20 @@ export async function readChunks(): Promise<StoredChunk[]> {
   if (!Array.isArray(parsed)) {
     throw new Error("Knowledge store must contain a JSON array.");
   }
-
   return parsed as StoredChunk[];
 }
 
 export async function saveDocumentChunks(
   filename: string,
   chunks: string[],
-  vectors: number[][]
+  vectors: number[][],
+  pageNumbers?: (number | undefined)[]
 ): Promise<StoredChunk[]> {
   if (chunks.length !== vectors.length) {
-    throw new Error("Each chunk must have exactly one embedding.");
+    throw new Error("Chunks and embeddings must have the same length.");
+  }
+  if (pageNumbers && pageNumbers.length!=chunks.length) {
+    throw new Error("Page numbers and chunks must have the same length.");
   }
 
   const existing = await readChunks();
@@ -56,6 +60,7 @@ export async function saveDocumentChunks(
     content,
     embedding: vectors[index],
     createdAt: new Date().toISOString(),
+    ...(pageNumbers?.[index]!=undefined?{pageNumber:pageNumbers[index]}:{})
   }));
 
   // Re-ingesting the same filename replaces its earlier chunks.
