@@ -8,18 +8,22 @@ export type RetrievedChunk = StoredChunk & {
 
 export async function retrieveChunks(
   question: string,
-  topK = 3
+  topK = 3,
+  filename?:string
 ): Promise<{ totalChunks: number; results: RetrievedChunk[] }> {
   const storedChunks = await readChunks();
 
-  if (storedChunks.length === 0) {
+  // Filter documents BEFORE ranking their chunks.
+  const filteredChunks = filename?.trim()
+    ? storedChunks.filter((chunk) =>chunk.filename.toLowerCase() === filename.trim().toLowerCase()): storedChunks;
+  if (filteredChunks.length === 0) {
     return { totalChunks: 0, results: [] };
   }
 
   // Embed only the user's question.
   const queryVector = await embedQuery(question);
 
-  const results = storedChunks
+  const results = filteredChunks
     .map((chunk) => ({
       ...chunk,
       score: cosineSimilarity(queryVector, chunk.embedding),
@@ -28,7 +32,7 @@ export async function retrieveChunks(
     .slice(0, topK);
 
   return {
-    totalChunks: storedChunks.length,
+    totalChunks: filteredChunks.length,
     results,
   };
 }
