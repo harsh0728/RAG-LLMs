@@ -6,30 +6,40 @@ export type RetrievedChunk = StoredChunk & {
   score: number;
 };
 
+export type RetrievalMode = "semantic" | "document";
+
 export async function retrieveChunks(
   question: string,
   topK = 3,
-  filename?:string
+  filename?: string,
+  retrievalMode: RetrievalMode = "semantic"
 ): Promise<{ totalChunks: number; results: RetrievedChunk[] }> {
   const storedChunks = await readChunks();
 
-  // Filter documents BEFORE ranking their chunks.
   const filteredChunks = filename?.trim()
-    ? storedChunks.filter((chunk) =>chunk.filename.toLowerCase() === filename.trim().toLowerCase()): storedChunks;
+    ? storedChunks.filter(
+        (chunk) =>
+          chunk.filename.toLowerCase() === filename.trim().toLowerCase()
+      )
+    : storedChunks;
+
   if (filteredChunks.length === 0) {
     return { totalChunks: 0, results: [] };
   }
 
-  // Embed only the user's question.
   const queryVector = await embedQuery(question);
 
-  const results = filteredChunks
-    .map((chunk) => ({
-      ...chunk,
-      score: cosineSimilarity(queryVector, chunk.embedding),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topK);
+  const scoredChunks = filteredChunks.map((chunk) => ({
+    ...chunk,
+    score: cosineSimilarity(queryVector, chunk.embedding),
+  }));
+
+  const results =
+    retrievalMode === "document"
+      ? scoredChunks.sort((a, b) => a.chunkIndex - b.chunkIndex)
+      : scoredChunks
+          .sort((a, b) => b.score - a.score)
+          .slice(0, topK);
 
   return {
     totalChunks: filteredChunks.length,
